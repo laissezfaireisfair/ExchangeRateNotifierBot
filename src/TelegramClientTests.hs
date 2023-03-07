@@ -2,7 +2,7 @@ import TelegramClient
 import Network.HTTP.Client
 import ConfigReader
 
-configPath = "config.json"
+configPath = "../config.json"
 
 getToken :: IO String
 getToken = do
