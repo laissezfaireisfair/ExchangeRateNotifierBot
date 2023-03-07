@@ -2,6 +2,8 @@ module TelegramClient where
 
 import Network.HTTP.Client
 import Text.JSON.Generic
+import Network.HTTP.Simple
+import qualified Data.ByteString.Char8 as S8
 
 _getRequestString :: String -> String -> String
 _getRequestString token methodName = "https://api.telegram.org/bot" ++ token ++ "/" ++ methodName
@@ -13,12 +15,20 @@ data User = User
     , username :: String
     , can_join_groups :: Bool
     , can_read_all_group_messages :: Bool
-    , supports_inline_quieries  :: Bool
     } deriving (Show, Data, Typeable)
 
---getMe :: String -> Manager -> IO (Maybe User)
-getMe token manager = do
-    request <- parseRequest $ _getRequestString token "getMe"
-    response <- httpLbs request manager
-    return response
-    --return Nothing
+data ResponseBody a = GetMeResponse
+    {   ok :: Bool
+    ,   result :: a
+    } deriving (Show, Data, Typeable)
+    
+runRequest :: (Show a, Data a, Typeable a) => String -> Manager -> String -> IO (Maybe a)
+runRequest token manager name = do
+    request <- parseRequest $ _getRequestString token name
+    response <- Network.HTTP.Client.httpLbs request manager
+    let body = S8.unpack $ S8.toStrict $ getResponseBody response
+    let response = decodeJSON body
+    return $ if ok response then Just (result response) else Nothing
+
+getMe :: String -> Manager -> IO (Maybe User)
+getMe token manager = runRequest token manager "getMe"

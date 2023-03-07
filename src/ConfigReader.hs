@@ -5,9 +5,8 @@ import Text.JSON.Generic
 expectedConfigClass = 1
 
 data Config = Config
-    {
-        token :: String,
-        configClassVersion :: Integer
+    {   token :: String
+    ,   configClassVersion :: Integer
     } deriving (Show, Data, Typeable)
 
 readConfig :: String -> IO Config

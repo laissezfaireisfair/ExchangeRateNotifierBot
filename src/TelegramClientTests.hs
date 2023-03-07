@@ -9,8 +9,11 @@ getToken :: IO String
 getToken = do
     config <- readConfig configPath
     return $ token config
+
+runGetMeTest :: String -> Manager -> IO  (Maybe User)
+runGetMeTest = getMe
+
 main = do
     manager <- newManager tlsManagerSettings
     token <- getToken
-    response <- getMe token manager
-    print response
+    runGetMeTest token manager >>= print
