@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module ConfigReader where
 
 import Text.JSON.Generic ( Data, Typeable, decodeJSON )

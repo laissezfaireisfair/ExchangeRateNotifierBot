@@ -1,4 +1,6 @@
 module TelegramClient where
+{-# LANGUAGE DeriveDataTypeable #-}
+
 import Network.HTTP.Client ( httpLbs, parseRequest, Manager )
 import Text.JSON.Generic ( Data, Typeable, decodeJSON )
 import Network.HTTP.Simple ( getResponseBody )
