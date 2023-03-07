@@ -1,8 +1,7 @@
 module TelegramClient where
-
-import Network.HTTP.Client
-import Text.JSON.Generic
-import Network.HTTP.Simple
+import Network.HTTP.Client ( httpLbs, parseRequest, Manager )
+import Text.JSON.Generic ( Data, Typeable, decodeJSON )
+import Network.HTTP.Simple ( getResponseBody )
 import qualified Data.ByteString.Char8 as S8
 
 _getRequestString :: String -> String -> String
@@ -21,7 +20,8 @@ data ResponseBody a = GetMeResponse
     {   ok :: Bool
     ,   result :: a
     } deriving (Show, Data, Typeable)
-    
+
+-- TODO: Handle request error
 runRequest :: (Show a, Data a, Typeable a) => String -> Manager -> String -> IO (Maybe a)
 runRequest token manager name = do
     request <- parseRequest $ _getRequestString token name
