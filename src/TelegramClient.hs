@@ -1,5 +1,5 @@
-module TelegramClient where
 {-# LANGUAGE DeriveDataTypeable #-}
+module TelegramClient where
 
 import Network.HTTP.Client ( httpLbs, parseRequest, Manager )
 import Text.JSON.Generic ( Data, Typeable, decodeJSON )

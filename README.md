@@ -4,7 +4,4 @@ Config schema:
     "configClassVersion": 1
 }
 
-Package list:
-    http-client
-    http-conduit
-    json
+Build with cabal
