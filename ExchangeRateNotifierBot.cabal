@@ -56,7 +56,7 @@ executable ExchangeRateNotifierBot
     other-extensions: DeriveDataTypeable
 
     -- Other library packages from which modules are imported.
-    build-depends:    json, http-client, directory, http-conduit, bytestring, http-client-tls, base ^>=4.16.4.0
+    build-depends:    json, http-client, directory, http-conduit, bytestring, http-client-tls, base ^>=4.16.2.0
 
     -- Directories containing source files.
     hs-source-dirs:   src
