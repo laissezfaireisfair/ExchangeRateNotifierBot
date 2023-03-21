@@ -1,6 +1,6 @@
 module TelegramClientTests where
 
-import TelegramClient ( getMe )
+import TelegramClient ( getMe, getMessageUpdates )
 import Network.HTTP.Client ( newManager )
 import ConfigReader ( readConfig, Config(token) )
 import Network.HTTP.Client.TLS ( tlsManagerSettings )
@@ -23,3 +23,4 @@ runTelegramTests = do
     else do
         let token = fromJust tokenMaybe
         getMe token manager >>= print
+        getMessageUpdates token manager >>= print
