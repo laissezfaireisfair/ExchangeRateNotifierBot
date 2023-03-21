@@ -7,7 +7,8 @@ import GHC.Generics ( Generic )
 import System.Directory ( doesFileExist )
 import qualified Data.ByteString.Char8 as S8
 
-expectedConfigClass = 1
+expectedConfigVersion :: Integer
+expectedConfigVersion = 1  -- Any changes to Config class should increment version (also update scheme in README)
 
 data Config = Config
     {   token :: String
@@ -21,6 +22,6 @@ readConfig path = do
         configSerialized <- readFile path
         let configSerializedLazy = S8.fromStrict $ S8.pack configSerialized
         let decodedJson = decode configSerializedLazy
-        let isCorrect = maybe False (\ j -> configClassVersion j == expectedConfigClass) decodedJson
+        let isCorrect = maybe False (\ j -> configClassVersion j == expectedConfigVersion) decodedJson
         return $ if isCorrect then decodedJson else Nothing
     else return Nothing

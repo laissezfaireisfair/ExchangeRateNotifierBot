@@ -7,6 +7,7 @@ import Data.Aeson ( FromJSON, ToJSON, decode )
 import GHC.Generics ( Generic )
 import Network.HTTP.Simple ( getResponseBody )
 import qualified Data.ByteString.Char8 as S8
+import Data.Maybe (fromJust, isJust)
 
 _paramsToUrlQuery :: [(String, String)] -> String
 _paramsToUrlQuery [] = ""
@@ -19,19 +20,18 @@ data User = User
     { id :: Integer
     , is_bot :: Bool
     , first_name :: String
-    , username :: String
-    , can_join_groups :: Bool
-    , can_read_all_group_messages :: Bool
+    , username :: Maybe String
     } deriving (Show, Generic, ToJSON, FromJSON)
 
 data Message = Message
     { message_id :: Integer
+    , from :: Maybe User
     , text :: Maybe String
     } deriving (Show, Generic, ToJSON, FromJSON)
 
 data Update = Update
     { update_id :: Integer
-    , message :: Message
+    , message :: Maybe Message
     } deriving (Show, Generic, ToJSON, FromJSON)
 
 data ResponseBody a = ResponseBody
@@ -49,7 +49,19 @@ runRequest token manager name params = do
     return $ if isCorrect then fmap result response else Nothing
 
 getMe :: String -> Manager -> IO (Maybe User)
-getMe token manager = runRequest token manager "getMe" []
+getMe token manager  = runRequest token manager "getMe" []
 
-getMessageUpdates :: String -> Manager -> IO (Maybe [Update])
-getMessageUpdates token manager = runRequest token manager "getUpdates" [("allowed_updates", "messages")]
+getMessageUpdates :: String -> Manager -> Maybe Integer -> IO (Maybe [Update])
+getMessageUpdates token manager lastUpdate = runRequest token manager "getUpdates" parameters
+                                where parameters = ("allowed_updates", "messages"):[("offset", show (fromJust lastUpdate)) | isJust lastUpdate]
+
+data MessageToSend = MessageToSend {   chat_id :: String
+                                   ,   text_MTS :: String
+                                   } deriving (Show)
+
+sendMessage :: String -> Manager -> MessageToSend -> IO (Maybe Message)
+sendMessage token manager message = runRequest token manager "sendMessage" parameters
+                                       where
+                                        parameters = [ ("chat_id", chat_id message)
+                                                     , ("text", text_MTS message)
+                                                     ]
