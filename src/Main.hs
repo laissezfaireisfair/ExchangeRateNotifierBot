@@ -42,7 +42,6 @@ mainLoopIteration token manager = do
     newUpd <- lift $ do
         newMessages <- TGC.getMessageUpdates token manager lastUpdate
         let newUpdate = getLastUpdate lastUpdate newMessages
-        print newUpdate
         let messagesToSend = replyToMessages newMessages
         unless (isNothing messagesToSend) (do
                 mapM_ (TGC.sendMessage token manager) (fromJust messagesToSend)
@@ -54,7 +53,7 @@ mainLoopIteration token manager = do
 main :: IO ()
 main = do
     tokenMaybe <- getToken
-    -- runTelegramTests tokenMaybe
+    runTelegramTests tokenMaybe
     unless (isNothing tokenMaybe) (do
         manager <- newManager tlsManagerSettings
         evalStateT (mainLoopIteration (fromJust tokenMaybe) manager) Nothing
