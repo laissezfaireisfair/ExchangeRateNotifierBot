@@ -6,7 +6,6 @@ import Network.HTTP.Client ( httpLbs, parseRequest, Manager )
 import Data.Aeson ( FromJSON, ToJSON, decode )
 import GHC.Generics ( Generic )
 import Network.HTTP.Simple ( getResponseBody )
-import qualified Data.ByteString.Char8 as S8
 import Data.Maybe (fromJust, isJust)
 
 _paramsToUrlQuery :: [(String, String)] -> String
