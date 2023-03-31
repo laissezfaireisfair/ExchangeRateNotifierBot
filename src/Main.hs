@@ -9,6 +9,7 @@ import Control.Monad.State ( forever, unless, StateT, MonadTrans (lift), MonadSt
 import Control.Concurrent (threadDelay)
 import TelegramClient (Update(update_id))
 import qualified BotLogic as BL
+import Control.Monad.Trans.Maybe (MaybeT(..))
 
 configPath :: String
 configPath = "config.json"
@@ -30,9 +31,11 @@ mainLoopIteration token manager = do
     newUpd <- lift $ do
         newMessages <- TGC.getMessageUpdates token manager lastUpdate
         let newUpdate = getLastUpdate lastUpdate newMessages
-        let messagesToSend = BL.replyToMessages newMessages
+        messagesToSend <- runMaybeT $ BL.replyToMessages manager newMessages
         unless (isNothing messagesToSend) (do
-                mapM_ (TGC.sendMessage token manager) (fromJust messagesToSend)
+                mapM_ (\m -> do
+                    threadDelay 100
+                    TGC.sendMessage token manager m) (fromJust messagesToSend)
             )
         return newUpdate
     put newUpd

@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields, DeriveGeneric, DeriveAnyClass #-}
 module ExchangeRateClient where 
 
 import Network.HTTP.Client ( httpLbs, parseRequest, Manager )
@@ -22,22 +23,22 @@ data Ticker = Ticker
         last :: Double
     } deriving (Show, Generic, ToJSON, FromJSON)
 
-data Market 
+data Market = Market
     {
         name :: String
     } deriving (Show, Generic, ToJSON, FromJSON)
 
 
-get_currencies :: Manager -> IO (Maybe [Currency])
-get_currencies manager = do
+getCurrencies :: Manager -> IO (Maybe [Currency])
+getCurrencies manager = do
     request <- parseRequest "https://api.coingecko.com/api/v3/coins/list"
     response <- Network.HTTP.Client.httpLbs request manager
     let body = getResponseBody response
     let response = decode body 
     return response
 
-get_rate :: Manager -> String -> IO (Maybe Rate)
-get_rate manager id = do
+getRate :: Manager -> String -> IO (Maybe Rate)
+getRate manager id = do
     request <- parseRequest $ "https://api.coingecko.com/api/v3/coins/" ++ id ++ "/tickers"
     response <- Network.HTTP.Client.httpLbs request manager
     let body = getResponseBody response
