@@ -1,4 +1,3 @@
-import TelegramClientTests (runTelegramTests)
 import Control.Monad (forever, unless)
 import Data.Maybe (isNothing, fromJust)
 import Network.HTTP.Client (newManager, Manager)
@@ -11,6 +10,8 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import qualified TelegramClient as TGC
 import qualified ConfigReader as CR
 import qualified BotLogic as BL
+import qualified TelegramClientTests as TTGC
+import qualified ExchangeRateClientTests as TERC
 
 configPath :: String
 configPath = "config.json"
@@ -45,7 +46,9 @@ mainLoopIteration token manager = do
 main :: IO ()
 main = do
     tokenMaybe <- getToken
-    runTelegramTests tokenMaybe
+    TTGC.runTelegramTests tokenMaybe
+    TERC.runRateClientTests tokenMaybe
+    putStrLn "Testing finished, running main loop..."
     unless (isNothing tokenMaybe) (do
         manager <- newManager tlsManagerSettings
         evalStateT (mainLoopIteration (fromJust tokenMaybe) manager) Nothing

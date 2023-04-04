@@ -50,7 +50,7 @@ executable ExchangeRateNotifierBot
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules: TelegramClient, ConfigReader, TelegramClientTests, BotLogic, ExchangeRateClient
+    other-modules: TelegramClient, ConfigReader, TelegramClientTests, BotLogic, ExchangeRateClient, ExchangeRateClientTests
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: DeriveDataTypeable
