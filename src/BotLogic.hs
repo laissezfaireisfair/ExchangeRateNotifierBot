@@ -73,10 +73,9 @@ tickerToString ticker = marketName ++ " - " ++ last ++ " " ++ target ++ "\n"
                         marketName = (ERC.name :: ERC.Market -> String) $ ERC.market ticker
 
 formatRate :: ERC.Rate -> String
-formatRate rate = "Rate of " ++ name ++ ":\n" ++ tickersInfo
+formatRate rate = if null tickersStrings then "Нет данных о курсе" else  "Курс " ++ name ++ ":\n" ++ concat tickersStrings
                 where
-                    tickersInfo = concat $ filter isGoodStringToSend tickersStrings
-                    tickersStrings = map tickerToString $ ERC.tickers rate
+                    tickersStrings = filter isGoodStringToSend $ map tickerToString $ ERC.tickers rate
                     name = (ERC.name :: ERC.Rate -> String) rate
 
 helpString :: String
