@@ -6,6 +6,8 @@ import Control.Monad.Trans.Maybe ( MaybeT(MaybeT) )
 import Text.Regex.Posix ( (=~) )
 import Control.Monad.Cont ( MonadTrans(lift) )
 import Network.HTTP.Client (Manager)
+import Data.Maybe (fromMaybe)
+import Data.List ( find, isPrefixOf, tails )
 
 import qualified ExchangeRateClient as ERC
 import qualified TelegramClient as TGC
@@ -19,17 +21,23 @@ replyToMessages manager updatesMb = do
 
 
 -- Private
-data Command = Help | Currencies | Rate String
+data Command = Help | Currencies | Rate String | SearchCurrency String
 
 parseCommand :: String -> Maybe Command
 parseCommand "/start" = Just Help
 parseCommand "/help" = Just Help
 parseCommand "/currencies" = Just Currencies
-parseCommand text = if text =~ rateRegex then Just (Rate currency) else Nothing
+parseCommand text | text =~ rateRegex = Just (Rate currency)
                   where
                     currency = head parts !! 1
                     parts = text =~ rateRegex :: [[String]]
-                    rateRegex = "^/rate +([a-zA-Z]+)$"
+                    rateRegex = "^/rate +([0-9a-zA-Z-]+)$"
+parseCommand text | text =~ rateRegex = Just (SearchCurrency name)
+                  where
+                    name = head parts !! 1
+                    parts = text =~ rateRegex :: [[String]]
+                    rateRegex = "^/search +([0-9a-zA-Z-]+)$"
+parseCommand _ = Nothing
 
 currencyToString :: ERC.Currency -> [Char]
 currencyToString c = id ++ " " ++ name ++ "\n"
@@ -71,9 +79,22 @@ formatRate rate = "Rate of " ++ name ++ ":\n" ++ tickersInfo
                     tickersStrings = map tickerToString $ ERC.tickers rate
                     name = (ERC.name :: ERC.Rate -> String) rate
 
+helpString :: String
+helpString = "/search *название* - поиск валюты (возвращает код и название)\n"
+           ++"/currencies - список валют (сперва код валюты, через пробел название)\n"
+           ++"/rate *код валюты* - состояние валюты"
+
+findString :: (Eq a) => [a] -> [a] -> Bool
+findString search str = any (isPrefixOf search) (tails str)
+
+searchCurrency :: String -> [ERC.Currency] -> String
+searchCurrency name currencies = if null currencyStrings then "Валюта не найдена" else concat currencyStrings
+                               where
+                                currencyStrings =  filter (findString name) $ map currencyToString currencies
+
 executeCommand :: Manager -> Maybe Command -> IO [String]
 executeCommand _ Nothing =  return ["Неизвестная команда либо неправильный параметр, используйте /help для получения списка команд"]
-executeCommand _ (Just Help) = return ["/currencies - список валют (сперва код валюты, через пробел название)\n/rate *код валюты* - состояние валюты"]
+executeCommand _ (Just Help) = return [helpString]
 executeCommand mgr (Just Currencies) = do
     currenciesMb <- ERC.getCurrencies mgr
     case currenciesMb of
@@ -84,6 +105,12 @@ executeCommand mgr (Just (Rate name)) = do
     case rateMb of
         Just rate -> return [formatRate rate]
         Nothing ->  return ["Не удается загрузить курс"]
+executeCommand mgr (Just (SearchCurrency name)) = do
+    currenciesMb <- ERC.getCurrencies mgr
+    case currenciesMb of
+        Just currencies -> return [searchCurrency name currencies]
+        Nothing ->  return ["Не удается загрузить валюты"]
+
 
 updateToReplies :: Manager -> TGC.Update -> MaybeT IO [TGC.MessageToSend]
 updateToReplies  mgr u = do
