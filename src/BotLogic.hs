@@ -1,12 +1,24 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-module BotLogic where
-import qualified TelegramClient as TGC
-import Control.Monad.Trans.Maybe
+
+module BotLogic (replyToMessages) where
+
+import Control.Monad.Trans.Maybe ( MaybeT(MaybeT) )
 import Text.Regex.Posix ( (=~) )
-import qualified ExchangeRateClient as ERC
-import Control.Monad.Cont
+import Control.Monad.Cont ( MonadTrans(lift) )
 import Network.HTTP.Client (Manager)
 
+import qualified ExchangeRateClient as ERC
+import qualified TelegramClient as TGC
+
+-- Public
+replyToMessages :: Manager -> Maybe [TGC.Update] -> MaybeT IO [TGC.MessageToSend]
+replyToMessages manager updatesMb = do
+    updates <- MaybeT . return $ updatesMb
+    updatesToReplies manager updates
+-- /Public
+
+
+-- Private
 data Command = Help | Currencies | Rate String
 
 parseCommand :: String -> Maybe Command
@@ -25,17 +37,28 @@ currencyToString c = id ++ " " ++ name ++ "\n"
                     id = ERC.id c 
                     name = (ERC.name :: ERC.Currency -> String) c
 
+isGoodStringToSend :: String -> Bool
+isGoodStringToSend = all isGoodSymbol
+                   where
+                    isGoodSymbol c | 'a' <= c && c <= 'z' = True
+                                   | 'A' <= c && c <= 'Z' = True
+                                   | '0' <= c && c <= '9' = True
+                                   | c == ' ' = True
+                                   | c == '\n' = True
+                                   | c == '-' = True
+                                   | c == '.' = True
+                                   | otherwise = False
+
 formatCurrencies :: [ERC.Currency] -> [String]
 formatCurrencies currencies = group currencyStrings
                             where
-                                currencyStrings = filter isGoodName $ map currencyToString currencies
-                                isGoodName = all (\ c -> 'a' <= c && c <= 'z' || c == '\n' || c == ' ' || c == '-' || '0' <= c && c <= '9' || 'A' <= c && c <= 'Z')
+                                currencyStrings = filter isGoodStringToSend $ map currencyToString currencies
                                 group [] = []
                                 group s = concat (take inOneMessage s) : group (drop inOneMessage s)
                                 inOneMessage = 100
 
 tickerToString :: ERC.Ticker -> String
-tickerToString ticker = "On " ++ marketName ++ " in " ++ target ++ " is " ++ last ++ "\n"
+tickerToString ticker = marketName ++ " - " ++ last ++ " " ++ target ++ "\n"
                       where
                         target = ERC.target ticker
                         last = show $ ERC.last ticker
@@ -44,7 +67,7 @@ tickerToString ticker = "On " ++ marketName ++ " in " ++ target ++ " is " ++ las
 formatRate :: ERC.Rate -> String
 formatRate rate = "Rate of " ++ name ++ ":\n" ++ tickersInfo
                 where
-                    tickersInfo = concat tickersStrings
+                    tickersInfo = concat $ filter isGoodStringToSend tickersStrings
                     tickersStrings = map tickerToString $ ERC.tickers rate
                     name = (ERC.name :: ERC.Rate -> String) rate
 
@@ -58,7 +81,6 @@ executeCommand mgr (Just Currencies) = do
         Nothing ->  return ["Не удается загрузить валюты"]
 executeCommand mgr (Just (Rate name)) = do
     rateMb <- ERC.getRate mgr name
-    print rateMb
     case rateMb of
         Just rate -> return [formatRate rate]
         Nothing ->  return ["Не удается загрузить курс"]
@@ -77,8 +99,4 @@ updatesToReplies :: Manager -> [TGC.Update] -> MaybeT IO [TGC.MessageToSend]
 updatesToReplies manager updates = do
     updatesLists <- mapM (updateToReplies manager) updates
     return $ concat updatesLists
-
-replyToMessages :: Manager -> Maybe [TGC.Update] -> MaybeT IO [TGC.MessageToSend]
-replyToMessages manager updatesMb = do
-    updates <- MaybeT . return $ updatesMb
-    updatesToReplies manager updates
+-- /Private

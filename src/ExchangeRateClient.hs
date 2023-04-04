@@ -1,11 +1,13 @@
 {-# LANGUAGE DuplicateRecordFields, DeriveGeneric, DeriveAnyClass #-}
-module ExchangeRateClient where 
+
+module ExchangeRateClient (Currency(..), Rate(..), Ticker(..), Market(..), getCurrencies, getRate) where 
 
 import Network.HTTP.Client ( httpLbs, parseRequest, Manager )
 import Data.Aeson ( FromJSON, ToJSON, decode )
 import GHC.Generics ( Generic )
 import Network.HTTP.Simple ( getResponseBody )
 
+-- Public
 data Currency = Currency
     { id :: String
     , name :: String
@@ -44,3 +46,4 @@ getRate manager id = do
     let body = getResponseBody response
     let response = decode body 
     return response
+-- /Public

@@ -1,15 +1,16 @@
 import TelegramClientTests (runTelegramTests)
 import Control.Monad (forever, unless)
-import qualified TelegramClient as TGC
-import qualified ConfigReader as CR
 import Data.Maybe (isNothing, fromJust)
 import Network.HTTP.Client (newManager, Manager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Control.Monad.State ( forever, unless, StateT, MonadTrans (lift), MonadState (get, put), evalStateT )
 import Control.Concurrent (threadDelay)
 import TelegramClient (Update(update_id))
-import qualified BotLogic as BL
 import Control.Monad.Trans.Maybe (MaybeT(..))
+
+import qualified TelegramClient as TGC
+import qualified ConfigReader as CR
+import qualified BotLogic as BL
 
 configPath :: String
 configPath = "config.json"

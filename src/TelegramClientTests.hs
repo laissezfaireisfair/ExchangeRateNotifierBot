@@ -1,11 +1,12 @@
-module TelegramClientTests where
+module TelegramClientTests (runTelegramTests) where
 
-import TelegramClient ( getMe, getMessageUpdates )
 import Network.HTTP.Client ( newManager )
-import ConfigReader ( readConfig, Config(token) )
 import Network.HTTP.Client.TLS ( tlsManagerSettings )
 import Data.Maybe ( fromJust, isNothing )
 
+import qualified TelegramClient as TGC
+
+-- Public
 runTelegramTests :: Maybe String -> IO ()
 runTelegramTests tokenMaybe = do
     manager <- newManager tlsManagerSettings
@@ -13,5 +14,6 @@ runTelegramTests tokenMaybe = do
         then print "Cannot load token from config"
     else do
         let token = fromJust tokenMaybe
-        getMe token manager >>= print
-        getMessageUpdates token manager Nothing >>= print
+        TGC.getMe token manager >>= print
+        TGC.getMessageUpdates token manager Nothing >>= print
+-- /Public

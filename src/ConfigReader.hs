@@ -1,15 +1,13 @@
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
-module ConfigReader where
+module ConfigReader (Config(..), readConfig) where
 
 import Data.Aeson ( FromJSON, ToJSON, decode )
 import GHC.Generics ( Generic )
 import System.Directory ( doesFileExist )
 import qualified Data.ByteString.Char8 as S8
 
-expectedConfigVersion :: Integer
-expectedConfigVersion = 1  -- Any changes to Config class should increment version (also update scheme in README)
-
+-- Public
 data Config = Config
     {   token :: String
     ,   configClassVersion :: Integer
@@ -21,7 +19,16 @@ readConfig path = do
     if isFileExists then do
         configSerialized <- readFile path
         let configSerializedLazy = S8.fromStrict $ S8.pack configSerialized
-        let decodedJson = decode configSerializedLazy
-        let isCorrect = maybe False (\ j -> configClassVersion j == expectedConfigVersion) decodedJson
-        return $ if isCorrect then decodedJson else Nothing
+        return $ do
+            decodedJson <- decode configSerializedLazy
+            if configClassVersion decodedJson == expectedConfigVersion then
+                return decodedJson
+            else
+                Nothing
     else return Nothing
+-- /Public
+
+-- Private
+expectedConfigVersion :: Integer
+expectedConfigVersion = 1  -- Any changes to Config class should increment version (also update scheme in README)
+-- /Private
