@@ -1,3 +1,5 @@
+Telegram bot that provides cryptocurrency exchange rate.
+
 Config schema:
 {
     "token": "YOURTOKEN",
